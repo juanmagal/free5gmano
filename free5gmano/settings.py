@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "moi",
     'FaultManagement',
     'corsheaders',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -82,6 +83,11 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'free5gmano.urls'
+
+REST_FRAMEWORK = {
+    # your other DRF settings here
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
 
 TEMPLATES = [
     {
