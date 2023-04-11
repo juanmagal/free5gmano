@@ -394,8 +394,6 @@ components:
             - $ref: 'TS28541_SliceNrm.yaml#/components/schemas/resources-sliceNrm'
             - $ref: 'TS28536_CoslaNrm.yaml#/components/schemas/resources-coslaNrm'            
             - $ref: 'TS28312_IntentNrm.yaml#/components/schemas/resources-intentNrm'
-            - $ref: 'TS28104_MdaNrm.yaml#/components/schemas/resources-mdaNrm'
-            - $ref: 'TS28105_AiMlNrm.yaml#/components/schemas/resources-AiMlNrm'                           
     Scope:
       type: object
       properties:
