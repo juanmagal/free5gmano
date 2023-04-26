@@ -41,9 +41,6 @@ data:
                   - SNSSAI:
                       SST: 1
                       SD: 010203
-                  - SNSSAI:
-                      SST: 1
-                      SD: 112233
       # IPSec virtual interface
       IPSecInterfaceAddress: 10.0.0.1
 
