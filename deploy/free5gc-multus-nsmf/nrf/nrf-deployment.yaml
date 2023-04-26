@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-v1-free5gc-nrf-nrf
+  labels:
+    helm.sh/chart: free5gc-nrf-0.2.4
+    app.kubernetes.io/name: free5gc-nrf
+    app.kubernetes.io/instance: free5gc-v1
+    app.kubernetes.io/version: "v3.2.1"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: nrf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: free5gc-nrf
+      app.kubernetes.io/instance: free5gc-v1
+      project: free5gc
+      nf: nrf
+  template:
+    metadata:
+      annotations:
+
+        checksum/config: 894921faddfd65fd9296e2bf2668200785e623c124f95117bf16f1e3808b456d
+      labels:
+        app.kubernetes.io/name: free5gc-nrf
+        app.kubernetes.io/instance: free5gc-v1
+        project: free5gc
+        nf: nrf
+    spec:
+      imagePullSecrets:
+        []
+      securityContext:
+        {}
+      initContainers:
+      - name: wait-mongo
+        image: busybox:1.32.0
+        env:
+        - name: DEPENDENCIES
+          value: mongodb:27017
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the MongoDB; sleep 2; done;"]
+      containers:
+      - name: nrf
+        image: towards5gs/free5gc-nrf:v3.2.1
+        imagePullPolicy: Always
+        securityContext:
+            {}
+        ports:
+        - containerPort: 8000
+        command: ["./nrf"]
+        args: ["-c", "../config/nrfcfg.yaml"]
+        env:
+          - name: DB_URI
+            value: mongodb://mongodb/free5gc
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: nrf-volume
+        resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        readinessProbe:
+          initialDelaySeconds: 0
+          periodSeconds: 1
+          timeoutSeconds: 1
+          failureThreshold:  40
+          successThreshold: 1
+          httpGet:
+            scheme: "HTTP"
+            port: 8000
+        livenessProbe:
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+          httpGet:
+            scheme: "HTTP"
+            port: 8000
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+
+      volumes:
+      - name: nrf-volume
+        projected:
+          sources:
+          - configMap:
+              name: nrf-configmap
+

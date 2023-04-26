@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-v1-free5gc-webui-webui
+  labels:
+    helm.sh/chart: free5gc-webui-0.1.4
+    app.kubernetes.io/name: free5gc-webui
+    app.kubernetes.io/instance: free5gc-v1
+    app.kubernetes.io/version: "v3.2.1"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: webui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: free5gc-webui
+      app.kubernetes.io/instance: free5gc-v1
+      project: free5gc
+      nf: webui
+  template:
+    metadata:
+      annotations:
+
+        checksum/config: f800d9aa2c17cbfdbff854d6dc62585950b1b8db6e954e2e024033a3986632af
+      labels:
+        app.kubernetes.io/name: free5gc-webui
+        app.kubernetes.io/instance: free5gc-v1
+        project: free5gc
+        nf: webui
+    spec:
+      imagePullSecrets:
+        []
+      securityContext:
+        {}
+      initContainers:
+      - name: wait-mongo
+        image: busybox:1.32.0
+        env:
+        - name: DEPENDENCIES
+          value: mongodb:27017
+        command: ["sh", "-c", "until nc -z $DEPENDENCIES; do echo waiting for the MongoDB; sleep 2; done;"]
+      containers:
+      - name: webui
+        image: towards5gs/free5gc-webui:v3.2.1
+        imagePullPolicy: Always
+        securityContext:
+            {}
+        ports:
+        - containerPort: 5000
+        command: ["./webconsole"]
+        args: ["-c", "../config/webuicfg.yaml"]
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: webui-volume
+        resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        readinessProbe:
+          initialDelaySeconds: 0
+          periodSeconds: 1
+          timeoutSeconds: 1
+          failureThreshold:  40
+          successThreshold: 1
+          httpGet:
+            scheme: HTTP
+            port: 5000
+        livenessProbe:
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+          httpGet:
+            scheme: HTTP
+            port: 5000
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+
+      volumes:
+      - name: webui-volume
+        projected:
+          sources:
+          - configMap:
+              name: webui-configmap
+

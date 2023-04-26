@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-v1-free5gc-udm-udm
+  labels:
+    helm.sh/chart: free5gc-udm-0.2.4
+    app.kubernetes.io/name: free5gc-udm
+    app.kubernetes.io/instance: free5gc-v1
+    app.kubernetes.io/version: "v3.2.1"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: udm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: free5gc-udm
+      app.kubernetes.io/instance: free5gc-v1
+      project: free5gc
+      nf: udm
+  template:
+    metadata:
+      annotations:
+
+        checksum/config: b7a06476cab1c13008aca8ee587fa10743154f8dc7961bfb5d4a395e925829f7
+      labels:
+        app.kubernetes.io/name: free5gc-udm
+        app.kubernetes.io/instance: free5gc-v1
+        project: free5gc
+        nf: udm
+    spec:
+      imagePullSecrets:
+        []
+      securityContext:
+        {}
+      initContainers:
+      - name: wait-nrf
+        image: towards5gs/initcurl:1.0.0
+        env:
+        - name: DEPENDENCIES
+          value: http://nrf-nnrf:8000
+        command: ['sh', '-c', 'set -x; for dependency in $DEPENDENCIES; do while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" $dependency) -ne 200 ]; do echo waiting for dependencies; sleep 1; done; done;']
+      containers:
+      - name: udm
+        image: towards5gs/free5gc-udm:v3.2.1
+        imagePullPolicy: Always
+        securityContext:
+            {}
+        ports:
+        - containerPort: 80
+        command: ["./udm"]
+        args: ["-c", "../config/udmcfg.yaml"]
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: udm-volume
+        resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+
+      volumes:
+      - name: udm-volume
+        projected:
+          sources:
+          - configMap:
+              name: udm-configmap
+

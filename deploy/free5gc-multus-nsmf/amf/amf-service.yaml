@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: amf-namf
+  labels:
+    helm.sh/chart: free5gc-amf-0.2.4
+    app.kubernetes.io/name: free5gc-amf
+    app.kubernetes.io/instance: free5gc-v1
+    app.kubernetes.io/version: "v3.2.1"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: amf
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: free5gc-amf
+    app.kubernetes.io/instance: free5gc-v1
+    project: free5gc
+    nf: amf
+---
+# Source: free5gc/charts/free5gc-amf/templates/amf-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: amf-n2
+  labels:
+    project: free5gc
+    nf: amf
+spec:
+  type: NodePort
+  ports:
+    - name: n2
+      port: 38412
+      nodePort: 31412
+      protocol: SCTP
+  selector:
+    project: free5gc
+    nf: amf
+

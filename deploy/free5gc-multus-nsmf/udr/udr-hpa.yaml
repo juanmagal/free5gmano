@@ -1,0 +1,21 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: free5gc-v1-free5gc-udr-hpa
+  labels:
+    helm.sh/chart:
+    app.kubernetes.io/name:
+    app.kubernetes.io/instance: "free5gc-udr"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: free5gc-v1-free5gc-udr-udr
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: 80
+

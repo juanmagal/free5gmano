@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-v1-free5gc-upf-upf
+  labels:
+    helm.sh/chart: free5gc-upf-0.2.4
+    app.kubernetes.io/name: free5gc-upf
+    app.kubernetes.io/instance: free5gc-v1
+    app.kubernetes.io/version: "v3.2.1"
+    app.kubernetes.io/managed-by: Helm
+    project: free5gc
+    nf: upf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: free5gc-upf
+      app.kubernetes.io/instance: free5gc-v1
+      project: free5gc
+      nf: upf
+  template:
+    metadata:
+      annotations:
+
+        k8s.v1.cni.cncf.io/networks: '[
+            { "name": "n3network-free5gc-v1-free5gc-upf",
+              "interface": "n3",
+              "ips": [ "10.100.50.233/29" ],
+              "gateway": [ "10.100.50.238" ]
+            },
+            { "name": "n6network-free5gc-v1-free5gc-upf",
+              "interface": "n6",
+              "ips": [ "10.100.100.12/24" ],
+              "gateway": [ "10.100.100.1" ]
+            },
+            { "name": "n4network-free5gc-v1-free5gc-upf",
+              "interface": "n4",
+              "ips": [ "10.100.50.241/29" ],
+              "gateway": [ "10.100.50.246" ]
+            }
+            ]'
+        checksum/config: b10e89b804cc358e8c98e1f24dbdcc5a673356d24e8be3c2a939c8dac31a97b1
+      labels:
+        app.kubernetes.io/name: free5gc-upf
+        app.kubernetes.io/instance: free5gc-v1
+        project: free5gc
+        nf: upf
+    spec:
+      imagePullSecrets:
+        []
+      securityContext:
+        {}
+      containers:
+      - name: upf
+        image: towards5gs/free5gc-upf:v3.2.1
+        imagePullPolicy: Always
+        securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+        ports:
+        - name: n4
+          containerPort: 8805
+          protocol: UDP
+        command: ["/free5gc/config//wrapper.sh"]
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: upf-volume
+        resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+
+      volumes:
+      - name: upf-volume
+        projected:
+          sources:
+          - configMap:
+              name: upf-configmap
+              items:
+              - key: upfcfg.yaml
+                path: upfcfg.yaml
+              - key: wrapper.sh
+                path: wrapper.sh
+                mode: 0777
+

@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: n3iwf-configmap
+  labels:
+    app: free5gc
+data:
+  n3iwfcfg.yaml: |
+    info:
+      version: 1.0.0
+      description: N3IWF initial local configuration
+
+    configuration:
+      AMFSCTPAddresses:
+        - IP:
+          - amf-n2
+          Port: 38412
+
+      # Bind Interfaces
+      # IKE interface
+      IKEBindAddress: 172.16.10.5
+      # contrarly to the example used in docker compose here we attribute a special interface for the IKE daemon (as specified in the free5gc main project in github)
+
+      # GTP interface
+      GTPBindAddress: 10.100.50.237
+      N3IWFInformation:
+        GlobalN3IWFID:
+          PLMNID:
+            MCC: 208
+            MNC: 93
+          N3IWFID: 135
+        Name:
+          free5GC_N3IWF
+        SupportedTAList:
+          - TAC: 000001
+            BroadcastPLMNList:
+              - PLMNID:
+                  MCC: 208
+                  MNC: 93
+                TAISliceSupportList:
+                  - SNSSAI:
+                      SST: 1
+                      SD: 010203
+                  - SNSSAI:
+                      SST: 1
+                      SD: 112233
+      # IPSec virtual interface
+      IPSecInterfaceAddress: 10.0.0.1
+
+      # IPSec virtual interface mark
+      IPSecInterfaceMark: 5
+
+      # NAS TCP Listen Port
+      NASTCPPort: 20000
+
+      # N3IWF FQDN
+      FQDN: n3iwf.free5gc.org
+
+      # Security
+      # Private Key File Path
+      PrivateKey: config/TLS/n3iwf.key
+      # Certificate Authority (CA)
+      CertificateAuthority: config/TLS/n3iwf.pem
+      # Certificate
+      Certificate: config/TLS/n3iwf.pem
+
+      # IP address that will be allocated to UE in IPSec tunnel
+      UEIPAddressRange: 10.0.0.0/24
+
+    logger:
+      Aper:
+        ReportCaller: false
+        debugLevel: info
+      N3IWF:
+        ReportCaller: false
+        debugLevel: debug
+      NGAP:
+        ReportCaller: false
+        debugLevel: info
+
+
+  n3iwf-ipsec.sh: |
+    #!/bin/sh
+
+    ### N3iwf IPSec tunnel configuration
+
+    ip l add name ipsec0 type vti local 172.16.10.5 remote 0.0.0.0 key 5
+    ip a add 10.0.0.1/24 dev ipsec0
+    ip l set dev ipsec0 up
+

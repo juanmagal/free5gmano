@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: free5gc-v1-free5gc-n3iwf
+  labels:
+    helm.sh/chart:
+    app.kubernetes.io/name:
+    project: free5gc
+    nf: n3iwf
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name:
+      project: free5gc
+      nf: n3iwf
+  template:
+    metadata:
+      annotations:
+
+        k8s.v1.cni.cncf.io/networks: '[
+            { "name": "n3network-n3iwf",
+              "interface": "n3",
+              "ips": [ "10.100.50.237/29" ],
+              "gateway": [ "10.100.50.238" ]
+            },
+
+            { "name": "ikenetwork-n3iwf",
+              "interface": "ike",
+              "ips": [ "172.16.10.5/24" ],
+              "gateway": [ "172.16.10.1" ]
+            }
+            ]'
+        checksum/config: ae94e49370558d49c48ec9b14a3052ef66a9a175137a2ff2d78464e260e6dd25
+      labels:
+        app.kubernetes.io/name:
+        project: free5gc
+        nf: n3iwf
+    spec:
+      imagePullSecrets:
+        []
+      securityContext:
+        {}
+      containers:
+      - name: n3iwf
+        image: towards5gs/free5gc-n3iwf:v3.2.1
+        imagePullPolicy: Always
+        securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+        command: ["sh", "-c", "../config/n3iwf-ipsec.sh && ./n3iwf -c ../config/n3iwfcfg.yaml"]
+        env:
+          - name: GIN_MODE
+            value: release
+        volumeMounts:
+        - mountPath: /free5gc/config/
+          name: n3iwf-volume
+        resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      nodeSelector:
+        {}
+      affinity:
+        {}
+      tolerations:
+        []
+
+      volumes:
+      - name: n3iwf-volume
+        projected:
+          sources:
+          - configMap:
+              name: n3iwf-configmap
+              items:
+              - key: n3iwfcfg.yaml
+                path: n3iwfcfg.yaml
+              - key: n3iwf-ipsec.sh
+                path: n3iwf-ipsec.sh
+                mode: 0777
+
