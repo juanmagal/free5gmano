@@ -54,8 +54,6 @@ data:
           snssaiList:
             - sst: 1
               sd: 010203
-            - sst: 1
-              sd: 112233
       supportDnnList:
         - internet
       security:
